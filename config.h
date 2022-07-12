@@ -1,14 +1,14 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 1;        /* border pixel of windows */
+static unsigned int borderpx  = 1;        /* border pixel of windows */
 static const Gap default_gap        = {.isgap = 1, .realgap = 10, .gappx = 10};
-static const unsigned int snap      = 32;       /* snap pixel */
-static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
+static unsigned int snap      = 32;       /* snap pixel */
+static int showbar            = 1;        /* 0 means no bar */
+static int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "monospace:size=10" };
 static const char dmenufont[]       = "monospace:size=10";
-static const int vertpad            = 10;       /* vertical padding of bar */
+static const int vertpad            = 50;       /* vertical padding of bar */
 static const int sidepad            = 10;       /* horizontal padding of bar */
 static const int usealtbar          = 1;        /* 1 means use non-dwm status bar */
 static const char *altbarclass      = "Polybar"; /* Alternate bar class name */
@@ -16,19 +16,21 @@ static const char *alttrayname      = "tray";    /* Polybar tray instance name *
 static const char *altbarcmd        = "$HOME/.config/polybar/launch.sh"; /* Alternate bar launch command */
 static const unsigned int baralpha = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
-static char col_urgborder[]   		= "#ff0000";
+// static char col_urgborder[]   		= "#ff0000";
 static char normbgcolor[]           = "#222222";
 static char normbordercolor[]       = "#444444";
 static char normfgcolor[]           = "#bbbbbb";
 static char selfgcolor[]            = "#eeeeee";
 static char selbordercolor[]        = "#005577";
 static char selbgcolor[]            = "#005577";
-static char *colors[][3] = {
-       /*               fg           bg           border   */
-       [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
-       [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
-       [SchemeUrg]  = { selfgcolor, selbgcolor,  col_urgborder  },
-};
+
+#include "/home/mad_flasher/.cache/wal/colors-wal-dwm.h"
+// static char *colors[][3] = {
+//        /*               fg           bg           border   */
+//        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
+//        [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+//        [SchemeUrg]  = { selfgcolor, selbgcolor,  col_urgborder  },
+// };
 
 static const unsigned int alphas[][3]      = {
 	/*               fg      bg        border     */
@@ -50,10 +52,29 @@ static const Rule rules[] = {
 };
 
 /* layout(s) */
-static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 1;    /* number of clients in master area */
-static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
+static float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
+static int nmaster     = 1;    /* number of clients in master area */
+static int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
+
+/*
+ * Xresources preferences to load at startup
+ */
+ResourcePref resources[] = {
+		{ "normbgcolor",        STRING,  &normbgcolor },
+		{ "normbordercolor",    STRING,  &normbordercolor },
+		{ "normfgcolor",        STRING,  &normfgcolor },
+		{ "selbgcolor",         STRING,  &selbgcolor },
+		{ "selbordercolor",     STRING,  &selbordercolor },
+		{ "selfgcolor",         STRING,  &selfgcolor },
+		{ "borderpx",          	INTEGER, &borderpx },
+		{ "snap",          		INTEGER, &snap },
+		{ "showbar",          	INTEGER, &showbar },
+		{ "topbar",          	INTEGER, &topbar },
+		{ "nmaster",          	INTEGER, &nmaster },
+		{ "resizehints",       	INTEGER, &resizehints },
+		{ "mfact",      	 	FLOAT,   &mfact },
+};
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -100,6 +121,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,				XK_p,	   spawn,   	   SHCMD("pavucontrol") },
 	{ MODKEY,	                	XK_q,      killclient,     {0} },
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ MODKEY|ControlMask|ShiftMask, XK_q,      quit,           {1} }, 
 	{ MODKEY,						XK_s,	   spawn,	       SHCMD("flameshot gui") },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY|ShiftMask,				XK_t,	   spawn,	       SHCMD("telegram") },
@@ -112,7 +134,7 @@ static Key keys[] = {
 	{ MODKEY,			            XK_F12,	   spawn,	   	   SHCMD("pamixer --allow-boost -i 10") },
 	{ MODKEY,			            XK_F11,	   spawn,	       SHCMD("pamixer --allow-boost -d 10") },
 	{ MODKEY,			            XK_F10,	   spawn,	       SHCMD("pamixer --toggle-mute") },
-	{ MODKEY|ShiftMask,             XK_F5,     xrdb,           {.v = NULL } },
+	{ MODKEY|ShiftMask,             XK_c,     xrdb,           {.v = NULL } },
 
 	{ MODKEY,             		    XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY|ShiftMask,             XK_Return, zoom,           {0} },
@@ -156,3 +178,21 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
 
+#include "ipc.h"
+static const char *ipcsockpath = "/tmp/dwm.sock";
+static IPCCommand ipccommands[] = {
+  IPCCOMMAND(  view,                1,      {ARG_TYPE_UINT}   ),
+  IPCCOMMAND(  toggleview,          1,      {ARG_TYPE_UINT}   ),
+  IPCCOMMAND(  tag,                 1,      {ARG_TYPE_UINT}   ),
+  IPCCOMMAND(  toggletag,           1,      {ARG_TYPE_UINT}   ),
+  IPCCOMMAND(  tagmon,              1,      {ARG_TYPE_UINT}   ),
+  IPCCOMMAND(  focusmon,            1,      {ARG_TYPE_SINT}   ),
+  IPCCOMMAND(  focusstack,          1,      {ARG_TYPE_SINT}   ),
+  IPCCOMMAND(  zoom,                1,      {ARG_TYPE_NONE}   ),
+  IPCCOMMAND(  incnmaster,          1,      {ARG_TYPE_SINT}   ),
+  IPCCOMMAND(  killclient,          1,      {ARG_TYPE_SINT}   ),
+  IPCCOMMAND(  togglefloating,      1,      {ARG_TYPE_NONE}   ),
+  IPCCOMMAND(  setmfact,            1,      {ARG_TYPE_FLOAT}  ),
+  IPCCOMMAND(  setlayoutsafe,       1,      {ARG_TYPE_PTR}    ),
+  IPCCOMMAND(  quit,                1,      {ARG_TYPE_NONE}   ),
+};
